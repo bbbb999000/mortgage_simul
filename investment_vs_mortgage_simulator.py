@@ -4,9 +4,16 @@ import pandas as pd
 
 st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
+
 st.markdown(
     """
     <style>
+	/* Shrink or eliminate top padding */
+    .block-container {
+        padding-top: 4rem !important;
+    }
+
+    /* Optional: limit width and center */
     .main .block-container {
         max-width: 900px;
         margin: auto;
@@ -15,6 +22,20 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# st.markdown(
+#     """
+#     <style>
+#     .main .block-container {
+#  		padding-top: 0rem;  /* default is around 6rem — reduce as needed */
+#         max-width: 900px;
+#         margin: auto;
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
+
 
 # # To make the sidebar wide enough, but flexible/adjustable if the screen size is smaller than 800px
 # st.markdown(
@@ -227,22 +248,44 @@ st.markdown('<div style="margin-bottom: 30px;"></div>', unsafe_allow_html=True)
 
 total_rent_over_years = rent_per_month * 12 * rent_years
 
-st.markdown(
-    f"""<table style="width:100%; border:1px solid #ddd; border-collapse: collapse">
-       <tr>
-         <td style="padding:8px;"><strong>Rent paid over 2 years:</strong> ${total_rent_over_years:,.2f}</td>
-         <td style="padding:8px;"><strong>Amount saved while renting:</strong> ${contrib:,.2f}</td>
-         <td style="padding:8px;"><strong>Future value of savings (after {rent_years} years):</strong> ${fv:,.2f}</td>
-       </tr></table>""",
-    unsafe_allow_html=True
-)
+# st.markdown(
+#     f"""<table style="width:100%; border:1px solid #ddd; border-collapse: collapse">
+#        <tr>
+#          <td style="padding:8px;"><strong>Rent paid over 2 years:</strong> ${total_rent_over_years:,.2f}</td>
+#          <td style="padding:8px;"><strong>Amount saved while renting:</strong> ${contrib:,.2f}</td>
+#          <td style="padding:8px;"><strong>Future value of savings:</strong> ${fv:,.2f}</td>
+#        </tr></table>""",
+#     unsafe_allow_html=True
+# )
+
+# st.markdown(f"""<table style="width:100%;background-color:#f0f8ff;border:1px solid #ddd;border-collapse:collapse">
+# <tr>
+# <td style="padding:8px;"><strong style="color:#003366">Rent paid over 2 years:</strong> <strong style="color:#e67300">${total_rent_over_years:,.2f}</strong></td>
+# <td style="padding:8px;"><strong style="color:#003366">Amount saved while renting:</strong> <strong style="color:#e67300">${contrib:,.2f}</strong></td>
+# <td style="padding:8px;"><strong style="color:#003366">Future value of savings:</strong> <strong style="color:#e67300">${fv:,.2f}</strong></td>
+# </tr></table>""",unsafe_allow_html=True)
+#
+# st.markdown(f"""<table style="width:100%;background-color:#f0f8ff;border:1px solid #ddd;border-collapse:collapse">
+# <tr>
+# <td style="padding:8px;"><strong style="color:#003366">Total down payment [Contributions 1+2]:</strong> <strong style="color:#e67300">${down_payment:,.2f}</strong></td>
+# <td style="padding:8px;"><strong style="color:#003366">Loan amount:</strong> <strong style="color:#e67300">${loan_amount:,.2f}</strong></td>
+# <td style="padding:8px;"><strong style="color:#003366">Monthly mortgage (P+I):</strong> <strong style="color:#e67300">${monthly_pay:,.2f}</strong></td>
+# </tr></table>""",unsafe_allow_html=True)
+
 
 st.markdown(f"""<table style="width:100%;background-color:#f0f8ff;border:1px solid #ddd;border-collapse:collapse">
+<tr>
+<td style="padding:8px;"><strong style="color:#003366">Rent paid over 2 years:</strong> <strong style="color:#e67300">${total_rent_over_years:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Amount saved while renting:</strong> <strong style="color:#e67300">${contrib:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Future value of savings:</strong> <strong style="color:#e67300">${fv:,.2f}</strong></td>
+</tr>
 <tr>
 <td style="padding:8px;"><strong style="color:#003366">Total down payment [Contributions 1+2]:</strong> <strong style="color:#e67300">${down_payment:,.2f}</strong></td>
 <td style="padding:8px;"><strong style="color:#003366">Loan amount:</strong> <strong style="color:#e67300">${loan_amount:,.2f}</strong></td>
 <td style="padding:8px;"><strong style="color:#003366">Monthly mortgage (P+I):</strong> <strong style="color:#e67300">${monthly_pay:,.2f}</strong></td>
 </tr></table>""",unsafe_allow_html=True)
+
+
 
 st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 #st.markdown("##### Year‑by‑Year Amortization Schedule")

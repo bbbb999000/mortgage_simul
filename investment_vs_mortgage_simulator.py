@@ -111,14 +111,18 @@ def remain_years(p, pay, r):
     return round(math.log(pay/(pay-p*m)) / math.log(1+m) /12,1)
 
 def amort_yearly(P, pay, r, lump):
+    def fmt(x): return f"${x:,.2f}" if isinstance(x, (int, float)) else x
     rows=[]
-    tot_int=tot_princ=0.0
+    months_per_year = 12
+    tot_int = tot_princ = 0.0
     year=0
-    while P>1e-6:
+    orig_pay = pay  # preserve original fixed monthly payment
+    while P > 1e-6:
         year +=1
-        sb=P
+        sb = P
+        months_paid = 0
         intp=prcp=0.0
-        for _ in range(12):
+        for _ in range(months_per_year):
             interest=P*r/12
             principal=max(0.0,pay-interest)
             if principal>P:
@@ -126,14 +130,18 @@ def amort_yearly(P, pay, r, lump):
             P-=principal
             intp+=interest
             prcp+=principal
-            if P<1e-6:
-                P=0
+            months_paid += 1
+            if P < 1e-6:
+                P = 0
                 break
         tot_int+=intp
         tot_princ+=prcp
         prev=P
         P=max(0.0,P-lump)
-        rows.append([year,sb,intp+prcp,intp,prcp,prev,P,remain_years(P,pay,r)])
+        total_paid = intp + prcp  # exact sum of principal + interest paid
+        rows.append([
+            year, sb, total_paid, intp, prcp, prev, P, remain_years(P, pay, r)
+        ])
     rows.append(["TOTAL",None,tot_int+tot_princ,tot_int,tot_princ,None,None,None])
     return rows
 
@@ -142,12 +150,13 @@ fv, contrib = future_value_ms(monthly_savings, annual_return, rent_years)
 down_payment = down_pay_part1 + fv
 loan_amount = home_price - down_payment
 monthly_pay = monthly_payment(loan_amount, apr, loan_term_years)
+#st.markdown(f"<b>Monthly mortgage (5dp):</b> {monthly_pay:.5f}", unsafe_allow_html=True)
 rows = amort_yearly(loan_amount, monthly_pay, apr, extra_payment)
 
 df = pd.DataFrame(rows, columns=[
-    "Year","Starting Balance","Mortgage [P+I] (yearly)",
-    "Interest Paid","Principal Paid","Balance Before Lump Sum",
-    "Balance After Lump Sum","Remaining Years"
+    "Year", "Starting Balance [P]", "Mortgage [P+I] (yearly)",
+    "Interest Paid [I]", "Principal Paid [P]", "Balance Before Lump Sum [P]",
+    "Balance After Lump Sum [P]", "Remaining Years"
 ])
 for c in df.columns[1:7]:
     df[c]=df[c].apply(lambda x: f"${x:,.2f}" if isinstance(x,(int,float)) else x)
@@ -157,10 +166,12 @@ for c in df.columns[1:7]:
 st.markdown("### 🏠 Mortgage & Investments Simulator")
 st.markdown('<div style="margin-bottom: 30px;"></div>', unsafe_allow_html=True)
 
+total_rent_over_years = rent_per_month * 12 * rent_years
 
 st.markdown(
     f"""<table style="width:100%; border:1px solid #ddd; border-collapse: collapse">
        <tr>
+         <td style="padding:8px;"><strong>Rent paid over 2 years:</strong> ${total_rent_over_years:,.2f}</td>
          <td style="padding:8px;"><strong>Amount saved while renting:</strong> ${contrib:,.2f}</td>
          <td style="padding:8px;"><strong>Future value of savings (after {rent_years} years):</strong> ${fv:,.2f}</td>
        </tr></table>""",

@@ -10,10 +10,10 @@ st.markdown(
     <style>
     @media (min-width: 800px) {
         section[data-testid="stSidebar"] {
-            width: 390px !important;
+            width: 330px !important;
         }
         section[data-testid="stSidebar"] > div:first-child {
-            width: 390px !important;
+            width: 330px !important;
         }
     }
     </style>
@@ -64,7 +64,7 @@ apr = apr_percent / 100
 col3, col4 = st.sidebar.columns(2)
 loan_term_years = col3.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
 #extra_payment = col2.currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
-extra_payment = col4.text_input("Lump sum @ end of year ($)", f"${D_EXTRA:,}", key="extra_payment")
+extra_payment = col4.text_input("Lump sum per year ($)", f"${D_EXTRA:,}", key="extra_payment")
 try:
     extra_payment = int(extra_payment.replace("$","").replace(",",""))
 except:

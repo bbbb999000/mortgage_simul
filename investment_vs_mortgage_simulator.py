@@ -4,6 +4,18 @@ import pandas as pd
 
 st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .block-container {
+        max-width: 1200px;
+        margin: auto;
+        padding-top: 2rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # st.markdown(
 #     """
@@ -106,7 +118,7 @@ st.sidebar.markdown(
 #     extra_payment = D_EXTRA
 
 
-home_price = currency_input(".Home price ($)", D_HOME, "home_price")
+home_price = currency_input("Home price ($)", D_HOME, "home_price")
 
 col1, col2 = st.sidebar.columns(2)
 apr_percent = col1.number_input("APR (%)", value=D_APR, format="%.3f")

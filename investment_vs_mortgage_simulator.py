@@ -1,169 +1,189 @@
 import math
-from tabulate import tabulate
+import streamlit as st
+import pandas as pd
 
-# ----------------------------
-# CONFIGURATION SECTION
-# ----------------------------
-home_price = 650000
-apr = 0.06251
-loan_term_years = 20
-lump_sum_per_year = 0
-rent_years = 0
-rent_per_month = 2200
-annual_return = 0.06
+st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
-# Monthly savings while renting (index 0 = January)
-monthly_savings_by_month = [
-    4000,  # January
-    4000,  # February
-    4000,  # March
-    4000,  # April
-    4000,  # May
-    10000, # June
-    10000, # July
-    10000, # August
-    4000,  # September
-    4000,  # October
-    4000,  # November
-    4000   # December
-]
-# ----------------------------
-
-def future_value_monthly_savings(monthly_savings_by_month, annual_return, years):
-    r = annual_return / 12
-    fv = 0
-    total_contributed = 0
-    for year in range(years):
-        for month_index in range(12):
-            monthly_saving = monthly_savings_by_month[month_index]
-            total_contributed += monthly_saving
-            fv = fv * (1 + r) + monthly_saving
-    return fv, total_contributed
-
-def calculate_monthly_payment(loan_amount, annual_rate, years):
-    r = annual_rate / 12
-    n = years * 12
-    return loan_amount * r / (1 - (1 + r) ** -n)
-
-def calculate_remaining_term(principal, payment, annual_rate):
-    r = annual_rate / 12
+def currency_input(label, value, key):
+    raw = st.sidebar.text_input(label, f"${value:,}", key=key)
     try:
-        n = math.log(payment / (payment - r * principal)) / math.log(1 + r)
+        return int(raw.replace("$", "").replace(",", "").strip())
     except:
-        return 0
-    return round(n / 12, 1)
+        return value
 
-def simulate_amortization_yearly(principal, monthly_payment, annual_rate, annual_lump_sum):
-    r = annual_rate / 12
-    year = 0
-    schedule = []
+# --- Defaults
+D_HOME = 650000
+D_APR = 6.251
+D_EXTRA = 30000
+D_DP1 = 0
+D_RENT_YEARS = 2
+D_RENT_MONTH = 2200
+D_RETURN = 6.0
+DEFAULT_SAVINGS = [4000]*5 + [10000]*3 + [4000]*4
 
-    total_mortgage_paid = 0
-    total_interest_paid = 0
-    total_principal_paid = 0
+# --- Sidebar: Mortgage params
+#st.sidebar.markdown("### 🏠 Mortgage Parameters")
 
-    while principal > 0:
-        year += 1
-        starting_balance = principal
-        interest_paid = 0
-        principal_paid = 0
+# --- Sidebar: Mortgate parms
+st.sidebar.markdown(
+    '<br><span style="color:#e67300; font-weight:bold;">Mortgage Parameters</span><br>',
+    unsafe_allow_html=True
+)
 
-        for month in range(12):
-            interest = principal * r
-            payment_toward_principal = monthly_payment - interest
-            if payment_toward_principal > principal:
-                payment_toward_principal = principal
-                monthly_payment = interest + principal
-            principal -= payment_toward_principal
-            interest_paid += interest
-            principal_paid += payment_toward_principal
-            if round(principal, 2) <= 0:
+home_price = currency_input("Home price ($)", D_HOME, "home_price")
+
+col1, col2 = st.sidebar.columns(2)
+apr_percent = col1.number_input("APR (%)", value=D_APR, format="%.3f")
+loan_term_years = col2.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
+apr = apr_percent / 100
+
+extra_payment = currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
+
+
+# --- Sidebar: Down payment part 1
+st.sidebar.markdown(
+    '<br><span style="color:#e67300; font-weight:bold;">Down payment [Contribution 1/2]</span><br>'
+    '<em>(Any sources)</em>',
+    unsafe_allow_html=True
+)
+
+down_pay_part1 = currency_input("Amount ($)", D_DP1, "down_part1")
+
+# --- Sidebar: Down payment part 2 & renting
+st.sidebar.markdown(
+    '<br><span style="color:#e67300; font-weight:bold;">Down payment [Contribution 2/2]</span><br>'
+    '<em>(Investments while renting)</em>',
+    unsafe_allow_html=True
+)
+col1, col2 = st.sidebar.columns(2)
+rent_years = col1.number_input("Years renting", value=D_RENT_YEARS, min_value=0, step=1)
+rent_per_month = col2.text_input("Monthly rent ($)", f"${D_RENT_MONTH:,}", key="monthly_rent")
+try:
+    rent_per_month = int(rent_per_month.replace("$","").replace(",",""))
+except:
+    rent_per_month = D_RENT_MONTH
+
+# --- Sidebar: Savings plan
+#st.sidebar.markdown("### 🗓️ Savings plan while renting")
+investment_return_percent = st.sidebar.number_input("Investment return (%)", value=D_RETURN, format="%.3f")
+annual_return = investment_return_percent / 100
+
+#st.sidebar.markdown(
+#    '<span style="color:#e67300;"><hr></span>',
+#    unsafe_allow_html=True
+#)
+
+st.sidebar.markdown('<div style="border-top: 1px solid #ccc; margin: 12px 0;"></div>', unsafe_allow_html=True)
+
+
+monthly_savings = []
+months = pd.date_range("2020-01-01", periods=12, freq="M").strftime("%B")
+for i in range(0,12,2):
+    c1, c2 = st.sidebar.columns(2)
+    val1 = c1.text_input(f"{months[i]} savings ($)", f"${DEFAULT_SAVINGS[i]:,}", key=f"sav_{i}")
+    val2 = c2.text_input(f"{months[i+1]} savings ($)", f"${DEFAULT_SAVINGS[i+1]:,}", key=f"sav_{i+1}")
+    try:
+        val1 = int(val1.replace("$","").replace(",",""))
+    except:
+        val1 = DEFAULT_SAVINGS[i]
+    try:
+        val2 = int(val2.replace("$","").replace(",",""))
+    except:
+        val2 = DEFAULT_SAVINGS[i+1]
+    monthly_savings.extend([val1, val2])
+
+# --- Calculations (same as before)
+def future_value_ms(ms, r, years):
+    r_m, fv, total = r/12, 0.0, 0.0
+    for _ in range(years):
+        for m in ms:
+            total += m
+            fv = fv*(1+r_m)+m
+    return fv, total
+
+def monthly_payment(P, r, yrs):
+    r_m = r/12
+    return P*r_m/(1-(1+r_m)**-(yrs*12))
+
+def remain_years(p, pay, r):
+    m = r/12
+    if pay <= p*m: return 0
+    return round(math.log(pay/(pay-p*m)) / math.log(1+m) /12,1)
+
+def amort_yearly(P, pay, r, lump):
+    rows=[]
+    tot_int=tot_princ=0.0
+    year=0
+    while P>1e-6:
+        year +=1
+        sb=P
+        intp=prcp=0.0
+        for _ in range(12):
+            interest=P*r/12
+            principal=max(0.0,pay-interest)
+            if principal>P:
+                principal, pay=P,interest+P
+            P-=principal
+            intp+=interest
+            prcp+=principal
+            if P<1e-6:
+                P=0
                 break
+        tot_int+=intp
+        tot_princ+=prcp
+        prev=P
+        P=max(0.0,P-lump)
+        rows.append([year,sb,intp+prcp,intp,prcp,prev,P,remain_years(P,pay,r)])
+    rows.append(["TOTAL",None,tot_int+tot_princ,tot_int,tot_princ,None,None,None])
+    return rows
 
-        total_paid_mortgage = interest_paid + principal_paid
-        total_mortgage_paid += total_paid_mortgage
-        total_interest_paid += interest_paid
-        total_principal_paid += principal_paid
+# --- Simulation
+fv, contrib = future_value_ms(monthly_savings, annual_return, rent_years)
+down_payment = down_pay_part1 + fv
+loan_amount = home_price - down_payment
+monthly_pay = monthly_payment(loan_amount, apr, loan_term_years)
+rows = amort_yearly(loan_amount, monthly_pay, apr, extra_payment)
 
-        balance_before_lump = principal
-        lump = min(annual_lump_sum, principal)
-        principal -= lump
-        years_remaining = calculate_remaining_term(principal, monthly_payment, annual_rate)
+df = pd.DataFrame(rows, columns=[
+    "Year","Starting Balance","Mortgage [P+I] (monthly)",
+    "Interest Paid","Principal Paid","Balance Before Lump Sum",
+    "Balance After Lump Sum","Remaining Years"
+])
+for c in df.columns[1:7]:
+    df[c]=df[c].apply(lambda x: f"${x:,.2f}" if isinstance(x,(int,float)) else x)
 
-        schedule.append([
-            year,
-            f"${starting_balance:,.2f}",
-            f"${total_paid_mortgage:,.2f}",
-            f"${interest_paid:,.2f}",
-            f"${principal_paid:,.2f}",
-            f"${balance_before_lump:,.2f}",
-            f"${principal:,.2f}",
-            f"{years_remaining}"
-        ])
+# --- Display
+#st.title("🏠 Mortgage & Investments Simulator")
+st.markdown("### 🏠 Mortgage & Investments Simulator")
+st.markdown('<div style="margin-bottom: 30px;"></div>', unsafe_allow_html=True)
 
-        if round(principal, 2) <= 0:
-            break
 
-    schedule.append([
-        "TOTAL",
-        "",
-        f"${total_mortgage_paid:,.2f}",
-        f"${total_interest_paid:,.2f}",
-        f"${total_principal_paid:,.2f}",
-        "",
-        "",
-        ""
-    ])
+st.markdown(
+    f"""<table style="width:100%; border:1px solid #ddd; border-collapse: collapse">
+       <tr>
+         <td style="padding:8px;"><strong>Amount saved while renting:</strong> ${contrib:,.2f}</td>
+         <td style="padding:8px;"><strong>Future value of savings (after {rent_years} years):</strong> ${fv:,.2f}</td>
+       </tr></table>""",
+    unsafe_allow_html=True
+)
 
-    return schedule, year
+st.markdown(f"""<table style="width:100%;background-color:#f0f8ff;border:1px solid #ddd;border-collapse:collapse">
+<tr>
+<td style="padding:8px;"><strong style="color:#003366">Total down payment [Contributions 1+2]:</strong> <strong style="color:#e67300">${down_payment:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Loan amount:</strong> <strong style="color:#e67300">${loan_amount:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Monthly mortgage (P+I):</strong> <strong style="color:#e67300">${monthly_pay:,.2f}</strong></td>
+</tr></table>""",unsafe_allow_html=True)
 
-def main():
-    down_payment, total_contributed = future_value_monthly_savings(
-        monthly_savings_by_month, annual_return, rent_years)
-    if rent_years == 0:
-        down_payment = 0
-    loan_amount = home_price - down_payment
-    monthly_payment = calculate_monthly_payment(loan_amount, apr, loan_term_years)
-    total_rent_paid = rent_per_month * 12 * rent_years
+st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
+#st.markdown("##### Year‑by‑Year Amortization Schedule")
+st.markdown('<h5 style="color:#3399cc;">Year‑by‑Year Amortization Schedule</h5>', unsafe_allow_html=True)
 
-    print("\n--- Home Purchase & Financing Plan ---\n")
-    print(f"Home price: ${home_price:,.2f}")
-    print(f"\tAPR (mortgage interest rate): {apr * 100:.3f}%")
+st.dataframe(df[df.Year!="TOTAL"], hide_index=True)
 
-    print()
-    print(f"Years renting: {rent_years}")
-    print(f"Monthly rent while renting: ${rent_per_month:,.2f}")
-    print(f"\tTotal rent paid during that time: ${total_rent_paid:,.2f}")
-
-    print()
-    print("Yearly savings/investments (while renting)")
-    print(f"\tInvestment return (while renting): {annual_return * 100:.1f}%")
-    print(f"\tTotal contributed to savings while renting: ${total_contributed:,.2f}")
-    print(f"\tEstimated future value of savings after {rent_years} years: ${down_payment:,.2f}")
-
-    print()
-    print(f"Down payment used: ${down_payment:,.2f}")
-    print(f"Loan amount: ${loan_amount:,.2f}")
-    print(f"\tMonthly mortgage payment (P+I): ${monthly_payment:,.2f}\n")
-
-    schedule, total_years = simulate_amortization_yearly(
-        loan_amount, monthly_payment, apr, lump_sum_per_year
-    )
-
-    headers = [
-        "Year",
-        "Starting\nBalance",
-        "Total mortgage\npaid this year",
-        "Interest paid\nthis year",
-        "Principal paid\nthis year",
-        "Balance before\nlump sum",
-        "Balance after\n$30.0k lump sum",
-        "Remaining\nyears"
-    ]
-
-    print("--- Year-by-Year Mortgage Summary ---")
-    print(tabulate(schedule, headers=headers, tablefmt="grid"))
-    print(f"\nLoan paid off in {total_years} years")
-
-if __name__ == "__main__":
-    main()
+tot, tot_int, tot_princ = rows[-1][2],rows[-1][3],rows[-1][4]
+st.markdown(f"""<table style="width:100%;background-color:#f0f8ff;border:1px solid #ddd;border-collapse:collapse">
+<tr>
+<td style="padding:8px;"><strong style="color:#003366">Total mortgage paid:</strong> <strong style="color:#e67300">${tot:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Total interest paid:</strong> <strong style="color:#e67300">${tot_int:,.2f}</strong></td>
+<td style="padding:8px;"><strong style="color:#003366">Total principal paid:</strong> <strong style="color:#e67300">${tot_princ:,.2f}</strong></td>
+</tr></table>""",unsafe_allow_html=True)

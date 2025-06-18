@@ -4,6 +4,18 @@ import pandas as pd
 
 st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .main .block-container {
+        max-width: 900px;
+        margin: auto;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # # To make the sidebar wide enough, but flexible/adjustable if the screen size is smaller than 800px
 # st.markdown(
 #     """

@@ -145,7 +145,7 @@ monthly_pay = monthly_payment(loan_amount, apr, loan_term_years)
 rows = amort_yearly(loan_amount, monthly_pay, apr, extra_payment)
 
 df = pd.DataFrame(rows, columns=[
-    "Year","Starting Balance","Mortgage [P+I] (monthly)",
+    "Year","Starting Balance","Mortgage [P+I] (yearly)",
     "Interest Paid","Principal Paid","Balance Before Lump Sum",
     "Balance After Lump Sum","Remaining Years"
 ])

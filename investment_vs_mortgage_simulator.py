@@ -4,22 +4,22 @@ import pandas as pd
 
 st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
-# To make the sidebar wide enough, but flexible/adjustable if the screen size is smaller than 800pxx
-st.markdown(
-    """
-    <style>
-    @media (min-width: 800px) {
-        section[data-testid="stSidebar"] {
-            width: 330px !important;
-        }
-        section[data-testid="stSidebar"] > div:first-child {
-            width: 330px !important;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# # To make the sidebar wide enough, but flexible/adjustable if the screen size is smaller than 800px
+# st.markdown(
+#     """
+#     <style>
+#     @media (min-width: 800px) {
+#         section[data-testid="stSidebar"] {
+#             width: 330px !important;
+#         }
+#         section[data-testid="stSidebar"] > div:first-child {
+#             width: 330px !important;
+#         }
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
 
 
 
@@ -49,38 +49,39 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-col1, col2 = st.sidebar.columns(2)
-#home_price = col3.text_input("Home price ($)", D_HOME, "home_price")
-home_price = col1.text_input("Home price ($)", f"${D_HOME:,}", key="home_price")
-try:
-    home_price = int(home_price.replace("$","").replace(",",""))
-except:
-    home_price = D_HOME
+# col1, col2 = st.sidebar.columns(2)
+# #home_price = col3.text_input("Home price ($)", D_HOME, "home_price")
+# home_price = col1.text_input("Home price ($)", f"${D_HOME:,}", key="home_price")
+# try:
+#     home_price = int(home_price.replace("$","").replace(",",""))
+# except:
+#     home_price = D_HOME
+#
+# apr_percent = col2.number_input("APR (%)", value=D_APR, format="%.3f")
+# apr = apr_percent / 100
 
-apr_percent = col2.number_input("APR (%)", value=D_APR, format="%.3f")
+
+#col3, col4 = st.sidebar.columns(2)
+#loan_term_years = col3.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
+
+#extra_payment = col2.currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
+
+# extra_payment = col4.text_input("Lump sum per year ($)", f"${D_EXTRA:,}", key="extra_payment")
+# try:
+#     extra_payment = int(extra_payment.replace("$","").replace(",",""))
+# except:
+#     extra_payment = D_EXTRA
+
+
+home_price = currency_input("Home price ($)", D_HOME, "home_price")
+
+col1, col2 = st.sidebar.columns(2)
+apr_percent = col1.number_input("APR (%)", value=D_APR, format="%.3f")
+loan_term_years = col2.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
 apr = apr_percent / 100
 
+extra_payment = currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
 
-col3, col4 = st.sidebar.columns(2)
-loan_term_years = col3.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
-#extra_payment = col2.currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
-extra_payment = col4.text_input("Lump sum per year ($)", f"${D_EXTRA:,}", key="extra_payment")
-try:
-    extra_payment = int(extra_payment.replace("$","").replace(",",""))
-except:
-    extra_payment = D_EXTRA
-
-
-
-
-# home_price = currency_input("Home price ($)", D_HOME, "home_price")
-#
-# col1, col2 = st.sidebar.columns(2)
-# apr_percent = col1.number_input("APR (%)", value=D_APR, format="%.3f")
-# loan_term_years = col2.selectbox("Loan term (years)", [10,15,20,25,30], index=2)
-# apr = apr_percent / 100
-#
-# extra_payment = currency_input("Extra lump payment at the end of each year ($)", D_EXTRA, "extra_payment")
 
 
 

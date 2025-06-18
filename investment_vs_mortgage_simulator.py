@@ -5,23 +5,23 @@ import pandas as pd
 st.set_page_config(page_title="Mortgage & Savings Simulator", layout="wide")
 
 
-st.markdown(
-    """
-    <style>
-	/* Shrink or eliminate top padding */
-    .block-container {
-        padding-top: 4rem !important;
-    }
-
-    /* Optional: limit width and center */
-    .main .block-container {
-        max-width: 900px;
-        margin: auto;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# st.markdown(
+#     """
+#     <style>
+# 	/* Shrink or eliminate top padding */
+#     .block-container {
+#         padding-top: 4rem !important;
+#     }
+#
+#     /* Optional: limit width and center */
+#     .main .block-container {
+#         max-width: 900px;
+#         margin: auto;
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
 
 # st.markdown(
 #     """
@@ -106,7 +106,7 @@ st.sidebar.markdown(
 #     extra_payment = D_EXTRA
 
 
-home_price = currency_input("Home price ($)", D_HOME, "home_price")
+home_price = currency_input(".Home price ($)", D_HOME, "home_price")
 
 col1, col2 = st.sidebar.columns(2)
 apr_percent = col1.number_input("APR (%)", value=D_APR, format="%.3f")
